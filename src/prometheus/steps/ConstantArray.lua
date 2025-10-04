@@ -503,9 +503,16 @@ for i, f in ipairs(steps) do
 	f();
 end
 
--- Add ALL VM code first, THEN add the array at the very end
-table.insert(ast.body.statements, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId}, {self:createArray()}));
+-- Add forward declaration at the beginning
+table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId}, {}));
 
+-- Add the array assignment at the very end
+table.insert(ast.body.statements, Ast.AssignmentStatement({
+	Ast.AssignmentVariable(self.rootScope, self.arrId)
+}, {
+	self:createArray()
+}));
+	
 self.rootScope = nil;
 self.arrId     = nil;
 
