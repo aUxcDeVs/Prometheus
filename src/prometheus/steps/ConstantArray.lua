@@ -181,12 +181,12 @@ local rotateCode = [=[
 	end
 ]=];
 
-function ConstantArray:addRotateCode(ast, insertPos)
+function ConstantArray:addRotateCode(ast, shift)
 	local parser = Parser:new({
 		LuaVersion = LuaVersion.Lua51;
 	});
 
-	local newAst = parser:parse(string.gsub(string.gsub(rotateCode, "SHIFT", tostring(self.rotateShift)), "LEN", tostring(#self.constants)));
+	local newAst = parser:parse(string.gsub(string.gsub(rotateCode, "SHIFT", tostring(shift)), "LEN", tostring(#self.constants)));
 	local forStat = newAst.body.statements[1];
 	forStat.body.scope:setParent(ast.body.scope);
 	visitast(newAst, nil, function(node, data)
@@ -200,10 +200,11 @@ function ConstantArray:addRotateCode(ast, insertPos)
 		end
 	end)
 
-	table.insert(ast.body.statements, insertPos, forStat);
+	-- Insert rotate code AFTER array assignment (which will be at the end)
+	table.insert(ast.body.statements, forStat);
 end
 
-function ConstantArray:addDecodeCode(ast, insertPos)
+function ConstantArray:addDecodeCode(ast)
 	if self.Encoding == "base64" then
 		local base64DecodeCode = [[
 	do ]] .. table.concat(util.shuffle{
@@ -278,7 +279,8 @@ function ConstantArray:addDecodeCode(ast, insertPos)
 			end
 		end)
 	
-		table.insert(ast.body.statements, insertPos, forStat);
+		-- Insert decode code AFTER array assignment (which will be at the end)
+		table.insert(ast.body.statements, forStat);
 	end
 end
 
@@ -344,16 +346,6 @@ function ConstantArray:apply(ast, pipeline)
 	if self.Shuffle then
 		self.constants = util.shuffle(self.constants);
 		self.lookup    = {};
-		for i, v in ipairs(self.constants) do
-			self.lookup[v] = i;
-		end
-	end
-
-	-- Rotate Array before encoding
-	if self.Rotate and #self.constants > 1 then
-		self.rotateShift = math.random(1, #self.constants - 1);
-		rotate(self.constants, -self.rotateShift);
-		self.lookup = {};
 		for i, v in ipairs(self.constants) do
 			self.lookup[v] = i;
 		end
@@ -465,14 +457,10 @@ function ConstantArray:apply(ast, pipeline)
 		end
 	end);
 
-	-- Now build the final structure in the correct order
-	local insertPosition = 1;
+	-- Add forward declaration at the BEGINNING
+	table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId}, {}));
 
-	-- 1. Add forward declaration
-	table.insert(ast.body.statements, insertPosition, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId}, {}));
-	insertPosition = insertPosition + 1;
-
-	-- 2. Add Wrapper Function Code
+	-- Add Wrapper Function at position 2 (after forward declaration)
 	local funcScope = Scope:new(self.rootScope);
 	funcScope:addReferenceToHigherScope(self.rootScope, self.arrId);
 	local arg = funcScope:addVariable();
@@ -484,7 +472,7 @@ function ConstantArray:apply(ast, pipeline)
 		addSubArg = Ast.AddExpression(Ast.VariableExpression(funcScope, arg), Ast.NumberExpression(self.wrapperOffset));
 	end
 
-	table.insert(ast.body.statements, insertPosition, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
+	table.insert(ast.body.statements, 2, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
 		Ast.VariableExpression(funcScope, arg)
 	}, Ast.Block({
 		Ast.ReturnStatement({
@@ -494,26 +482,22 @@ function ConstantArray:apply(ast, pipeline)
 			)
 		});
 	}, funcScope)));
-	insertPosition = insertPosition + 1;
 
-	-- 3. Add decode code (if needed)
-	if self.Encoding == "base64" then
-		self:addDecodeCode(ast, insertPosition);
-		insertPosition = insertPosition + 1;
-	end
-
-	-- 4. Add rotate code (if needed)
-	if self.Rotate and #self.constants > 1 then
-		self:addRotateCode(ast, insertPosition);
-		insertPosition = insertPosition + 1;
-	end
-
-	-- 5. FINALLY add the array assignment at the END
+	-- CRITICAL: Add the ARRAY ASSIGNMENT at the VERY END (no position = append to end)
 	table.insert(ast.body.statements, Ast.AssignmentStatement({
 		Ast.AssignmentVariable(self.rootScope, self.arrId)
 	}, {
 		self:createArray()
 	}));
+
+	-- NOW add decode and rotate code AFTER the array (they will be at the end too)
+	if self.Rotate and #self.constants > 1 then
+		local shift = math.random(1, #self.constants - 1);
+		rotate(self.constants, -shift);
+		self:addRotateCode(ast, shift);
+	end
+
+	self:addDecodeCode(ast);
 	
 	self.rootScope = nil;
 	self.arrId     = nil;
