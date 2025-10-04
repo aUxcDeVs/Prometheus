@@ -459,6 +459,9 @@ function ConstantArray:apply(ast, pipeline)
 
 	self:addDecodeCode(ast);
 
+	-- Forward declare the array variable at the top (empty)
+	table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId}, {}));
+
 	local steps = util.shuffle({
 		-- Add Wrapper Function Code
 		function() 
@@ -477,7 +480,7 @@ function ConstantArray:apply(ast, pipeline)
 			end
 
 			-- Create and Add the Function Declaration
-			table.insert(ast.body.statements, 1, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
+			table.insert(ast.body.statements, 2, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
 				Ast.VariableExpression(funcScope, arg)
 			}, Ast.Block({
 				Ast.ReturnStatement({
@@ -487,11 +490,6 @@ function ConstantArray:apply(ast, pipeline)
 					)
 				});
 			}, funcScope)));
-
-			-- Resulting Code:
-			-- function xy(a)
-			-- 		return ARR[a - 10]
-			-- end
 		end,
 		-- Rotate Array and Add unrotate code
 		function()
@@ -508,8 +506,11 @@ function ConstantArray:apply(ast, pipeline)
 		f();
 	end
 
-	-- Add the Array Declaration
-	table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId}, {self:createArray()}));
+	-- Add the Array Assignment at the BOTTOM
+	table.insert(ast.body.statements, Ast.AssignmentStatement(
+		{Ast.AssignmentVariable(self.rootScope, self.arrId)},
+		{self:createArray()}
+	));
 
 	self.rootScope = nil;
 	self.arrId     = nil;
