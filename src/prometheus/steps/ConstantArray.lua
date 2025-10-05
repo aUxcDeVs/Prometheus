@@ -1,4 +1,5 @@
--- This Script is Part of the Prometheus Obfuscator by Levno_710
+-- This Script is Part of the AuxFuscator by Aux Credits ( Levno_710 )
+-- This Script Modified by Aux ( 10/5/2025 )
 --
 -- ConstantArray.lua
 --
