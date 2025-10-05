@@ -9,6 +9,26 @@ local util = require("prometheus.util");
 local chararray = util.chararray;
 
 local varNames = {
+    -- TOXIC NAMES FIRST (Roasting OLD/DEAD obfuscators only)
+    "PSUdead",
+    "IronBrewRust",
+    "OldMoonSec",
+    "SkillIssue",
+    "SkidDetected",
+    "NiceTrieKid",
+    "TouchGrass",
+    "MomsCalling",
+    "GoOutside",
+    "StillHere",
+    "justGiveUp",
+    "WastingTime",
+    "FailedCrack",
+    "Deobfailed",
+    "NahBrogetout",
+    "CopeMald",
+    "RatioPlusL",
+    
+    -- Regular names below (backup if needed)
     "index",
     "iterator",
     "length",
@@ -145,25 +165,6 @@ local varNames = {
     "assert",
     "collectgarbage",
     "a", "b", "c", "i", "j", "m",
-    
-    -- TOXIC NAMES (Roasting OLD/DEAD obfuscators only)
-    "PSUdead",
-    "IronBrewRust",
-    "OldMoonSec",
-    "SkillIssue",
-    "SkidDetected",
-    "NiceTrieKid",
-    "TouchGrass",
-    "MomsCalling",
-    "GoOutside",
-    "StillHere",
-    "justGiveUp",
-    "WastingTime",
-    "FailedCrack",
-    "Deobfailed",
-    "NahBrogetout",
-    "CopeMald",
-    "RatioPlusL",
 }
 
 local function generateName(id, scope)
