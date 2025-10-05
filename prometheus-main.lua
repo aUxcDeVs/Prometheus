@@ -1,1 +1,5 @@
+--[[
+Hello!
+--]]
+
 require("cli")
