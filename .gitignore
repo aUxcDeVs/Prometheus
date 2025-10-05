@@ -8,7 +8,7 @@ srlua
 luajit
 buildnotes.txt
 srlua.exe
-glue.ex
+glue.exe
 build
 
 # Ignore Local Test Files
