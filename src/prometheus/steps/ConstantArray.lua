@@ -494,35 +494,47 @@ function ConstantArray:apply(ast, pipeline)
 				adjustedArg = Ast.AddExpression(Ast.VariableExpression(funcScope, arg), Ast.NumberExpression(self.wrapperOffset));
 			end
 
-			-- Create conditional to choose between arrays
-			-- if adjustedArg <= splitPoint then return arr1[adjustedArg] else return arr2[adjustedArg - splitPoint] end
-			local condition = Ast.LessOrEqualExpression(adjustedArg, Ast.NumberExpression(self.splitPoint));
+			-- Parse and inject conditional wrapper code
+			local wrapperCode = [[
+				if INDEX <= SPLIT then
+					return ARR1[INDEX]
+				else
+					return ARR2[INDEX - SPLIT]
+				end
+			]];
 			
-			local thenBlock = Ast.Block({
-				Ast.ReturnStatement({
-					Ast.IndexExpression(
-						Ast.VariableExpression(self.rootScope, self.arrId1),
-						adjustedArg
-					)
-				})
-			}, Scope:new(funcScope));
-
-			local arr2Index = Ast.SubExpression(adjustedArg, Ast.NumberExpression(self.splitPoint));
-			local elseBlock = Ast.Block({
-				Ast.ReturnStatement({
-					Ast.IndexExpression(
-						Ast.VariableExpression(self.rootScope, self.arrId2),
-						arr2Index
-					)
-				})
-			}, Scope:new(funcScope));
+			wrapperCode = string.gsub(wrapperCode, "SPLIT", tostring(self.splitPoint));
+			
+			local parser = Parser:new({LuaVersion = LuaVersion.Lua51});
+			local tempAst = parser:parse(wrapperCode);
+			local ifStatement = tempAst.body.statements[1];
+			ifStatement.scope:setParent(funcScope);
+			
+			-- Replace placeholders with actual references
+			visitast(ifStatement, nil, function(node, data)
+				if node.kind == AstKind.VariableExpression then
+					local varName = node.scope:getVariableName(node.id);
+					if varName == "INDEX" then
+						data.scope:removeReferenceToHigherScope(node.scope, node.id);
+						return adjustedArg;
+					elseif varName == "ARR1" then
+						data.scope:removeReferenceToHigherScope(node.scope, node.id);
+						data.scope:addReferenceToHigherScope(self.rootScope, self.arrId1);
+						node.scope = self.rootScope;
+						node.id = self.arrId1;
+					elseif varName == "ARR2" then
+						data.scope:removeReferenceToHigherScope(node.scope, node.id);
+						data.scope:addReferenceToHigherScope(self.rootScope, self.arrId2);
+						node.scope = self.rootScope;
+						node.id = self.arrId2;
+					end
+				end
+			end);
 
 			-- Create and Add the Function Declaration
 			table.insert(ast.body.statements, 1, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
 				Ast.VariableExpression(funcScope, arg)
-			}, Ast.Block({
-				Ast.IfStatement(condition, thenBlock, elseBlock)
-			}, funcScope)));
+			}, Ast.Block({ifStatement}, funcScope)));
 		end,
 		-- Rotate Arrays and Add unrotate code
 		function()
