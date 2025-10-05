@@ -100,24 +100,37 @@ function ConstantArray:init(settings)
 	
 end
 
-function ConstantArray:createArray()
+function ConstantArray:createArray(startIdx, endIdx)
 	local entries = {};
-	for i, v in ipairs(self.constants) do
+	local idx = 1;
+	for i = startIdx, endIdx do
+		local v = self.constants[i];
 		if type(v) == "string" then
 			v = self:encode(v);
 		end
-		entries[i] = Ast.TableEntry(Ast.ConstantNode(v));
+		entries[idx] = Ast.TableEntry(Ast.ConstantNode(v));
+		idx = idx + 1;
 	end
 	return Ast.TableConstructorExpression(entries);
 end
 
 function ConstantArray:indexing(index, data)
+	-- Determine which array and adjusted index
+	local arrId, adjustedIdx;
+	if index <= self.splitPoint then
+		arrId = self.arrId1;
+		adjustedIdx = index;
+	else
+		arrId = self.arrId2;
+		adjustedIdx = index - self.splitPoint;
+	end
+
 	if self.LocalWrapperCount > 0 and data.functionData.local_wrappers then
 		local wrappers = data.functionData.local_wrappers;
 		local wrapper = wrappers[math.random(#wrappers)];
 
 		local args = {};
-		local ofs = index - self.wrapperOffset - wrapper.offset;
+		local ofs = adjustedIdx - self.wrapperOffset - wrapper.offset;
 		for i = 1, self.LocalWrapperArgCount, 1 do
 			if i == wrapper.arg then
 				args[i] = Ast.NumberExpression(ofs);
@@ -132,7 +145,7 @@ function ConstantArray:indexing(index, data)
 			Ast.StringExpression(wrapper.index)
 		), args);
 	else
-		data.scope:addReferenceToHigherScope(self.rootScope,  self.wrapperId);
+		data.scope:addReferenceToHigherScope(self.rootScope, self.wrapperId);
 		return Ast.FunctionCallExpression(Ast.VariableExpression(self.rootScope, self.wrapperId), {
 			Ast.NumberExpression(index - self.wrapperOffset);
 		});
@@ -181,29 +194,29 @@ local rotateCode = [=[
 	end
 ]=];
 
-function ConstantArray:addRotateCode(ast, insertPos)
+function ConstantArray:addRotateCode(ast, shift, arrId, arrLen)
 	local parser = Parser:new({
 		LuaVersion = LuaVersion.Lua51;
 	});
 
-	local newAst = parser:parse(string.gsub(string.gsub(rotateCode, "SHIFT", tostring(self.rotateShift)), "LEN", tostring(#self.constants)));
+	local newAst = parser:parse(string.gsub(string.gsub(rotateCode, "SHIFT", tostring(shift)), "LEN", tostring(arrLen)));
 	local forStat = newAst.body.statements[1];
 	forStat.body.scope:setParent(ast.body.scope);
 	visitast(newAst, nil, function(node, data)
 		if(node.kind == AstKind.VariableExpression) then
 			if(node.scope:getVariableName(node.id) == "ARR") then
 				data.scope:removeReferenceToHigherScope(node.scope, node.id);
-				data.scope:addReferenceToHigherScope(self.rootScope, self.arrId);
+				data.scope:addReferenceToHigherScope(self.rootScope, arrId);
 				node.scope = self.rootScope;
-				node.id    = self.arrId;
+				node.id    = arrId;
 			end
 		end
 	end)
 
-	table.insert(ast.body.statements, insertPos, forStat);
+	table.insert(ast.body.statements, 1, forStat);
 end
 
-function ConstantArray:addDecodeCode(ast, insertPos)
+function ConstantArray:addDecodeCode(ast, arrId)
 	if self.Encoding == "base64" then
 		local base64DecodeCode = [[
 	do ]] .. table.concat(util.shuffle{
@@ -266,9 +279,9 @@ function ConstantArray:addDecodeCode(ast, insertPos)
 			if(node.kind == AstKind.VariableExpression) then
 				if(node.scope:getVariableName(node.id) == "ARR") then
 					data.scope:removeReferenceToHigherScope(node.scope, node.id);
-					data.scope:addReferenceToHigherScope(self.rootScope, self.arrId);
+					data.scope:addReferenceToHigherScope(self.rootScope, arrId);
 					node.scope = self.rootScope;
-					node.id    = self.arrId;
+					node.id    = arrId;
 				end
 
 				if(node.scope:getVariableName(node.id) == "LOOKUP_TABLE") then
@@ -278,7 +291,7 @@ function ConstantArray:addDecodeCode(ast, insertPos)
 			end
 		end)
 	
-		table.insert(ast.body.statements, insertPos, forStat);
+		table.insert(ast.body.statements, 1, forStat);
 	end
 end
 
@@ -311,7 +324,8 @@ end
 
 function ConstantArray:apply(ast, pipeline)
 	self.rootScope = ast.body.scope;
-	self.arrId     = self.rootScope:addVariable();
+	self.arrId1 = self.rootScope:addVariable();
+	self.arrId2 = self.rootScope:addVariable();
 
 	self.base64chars = table.concat(util.shuffle{
 		"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
@@ -349,15 +363,8 @@ function ConstantArray:apply(ast, pipeline)
 		end
 	end
 
-	-- Rotate Array before encoding
-	if self.Rotate and #self.constants > 1 then
-		self.rotateShift = math.random(1, #self.constants - 1);
-		rotate(self.constants, -self.rotateShift);
-		self.lookup = {};
-		for i, v in ipairs(self.constants) do
-			self.lookup[v] = i;
-		end
-	end
+	-- Calculate split point (roughly half)
+	self.splitPoint = math.ceil(#self.constants / 2);
 
 	-- Set Wrapper Function Offset
 	self.wrapperOffset = math.random(-self.MaxWrapperOffset, self.MaxWrapperOffset);
@@ -465,55 +472,111 @@ function ConstantArray:apply(ast, pipeline)
 		end
 	end);
 
-	-- Now build the final structure in the correct order
-	local insertPosition = 1;
+	-- Add decode code for both arrays
+	self:addDecodeCode(ast, self.arrId1);
+	self:addDecodeCode(ast, self.arrId2);
 
-	-- 1. Add the array assignment FIRST (before wrapper function)
-	table.insert(ast.body.statements, insertPosition, Ast.AssignmentStatement({
-		Ast.AssignmentVariable(self.rootScope, self.arrId)
-	}, {
-		self:createArray()
-	}));
-	insertPosition = insertPosition + 1;
+	local steps = util.shuffle({
+		-- Add Wrapper Function Code
+		function() 
+			local funcScope = Scope:new(self.rootScope);
+			-- Add Reference to both Arrays
+			funcScope:addReferenceToHigherScope(self.rootScope, self.arrId1);
+			funcScope:addReferenceToHigherScope(self.rootScope, self.arrId2);
 
-	-- 2. Add Wrapper Function Code
-	local funcScope = Scope:new(self.rootScope);
-	funcScope:addReferenceToHigherScope(self.rootScope, self.arrId);
-	local arg = funcScope:addVariable();
-	local addSubArg;
+			local arg = funcScope:addVariable();
+			local adjustedArg;
 
-	if self.wrapperOffset < 0 then
-		addSubArg = Ast.SubExpression(Ast.VariableExpression(funcScope, arg), Ast.NumberExpression(-self.wrapperOffset));
-	else
-		addSubArg = Ast.AddExpression(Ast.VariableExpression(funcScope, arg), Ast.NumberExpression(self.wrapperOffset));
+			-- Create add and Subtract code for offset
+			if self.wrapperOffset < 0 then
+				adjustedArg = Ast.SubExpression(Ast.VariableExpression(funcScope, arg), Ast.NumberExpression(-self.wrapperOffset));
+			else
+				adjustedArg = Ast.AddExpression(Ast.VariableExpression(funcScope, arg), Ast.NumberExpression(self.wrapperOffset));
+			end
+
+			-- Create conditional to choose between arrays
+			-- if adjustedArg <= splitPoint then return arr1[adjustedArg] else return arr2[adjustedArg - splitPoint] end
+			local condition = Ast.LessOrEqualExpression(adjustedArg, Ast.NumberExpression(self.splitPoint));
+			
+			local thenBlock = Ast.Block({
+				Ast.ReturnStatement({
+					Ast.IndexExpression(
+						Ast.VariableExpression(self.rootScope, self.arrId1),
+						adjustedArg
+					)
+				})
+			}, Scope:new(funcScope));
+
+			local arr2Index = Ast.SubExpression(adjustedArg, Ast.NumberExpression(self.splitPoint));
+			local elseBlock = Ast.Block({
+				Ast.ReturnStatement({
+					Ast.IndexExpression(
+						Ast.VariableExpression(self.rootScope, self.arrId2),
+						arr2Index
+					)
+				})
+			}, Scope:new(funcScope));
+
+			-- Create and Add the Function Declaration
+			table.insert(ast.body.statements, 1, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
+				Ast.VariableExpression(funcScope, arg)
+			}, Ast.Block({
+				Ast.IfStatement(condition, thenBlock, elseBlock)
+			}, funcScope)));
+		end,
+		-- Rotate Arrays and Add unrotate code
+		function()
+			if self.Rotate and #self.constants > 1 then
+				-- Split constants into two arrays
+				local constants1 = {};
+				local constants2 = {};
+				
+				for i = 1, self.splitPoint do
+					constants1[i] = self.constants[i];
+				end
+				
+				for i = self.splitPoint + 1, #self.constants do
+					constants2[i - self.splitPoint] = self.constants[i];
+				end
+
+				-- Rotate first array
+				if #constants1 > 1 then
+					local shift1 = math.random(1, #constants1 - 1);
+					rotate(constants1, -shift1);
+					-- Update main constants array
+					for i = 1, #constants1 do
+						self.constants[i] = constants1[i];
+					end
+					self:addRotateCode(ast, shift1, self.arrId1, #constants1);
+				end
+
+				-- Rotate second array
+				if #constants2 > 1 then
+					local shift2 = math.random(1, #constants2 - 1);
+					rotate(constants2, -shift2);
+					-- Update main constants array
+					for i = 1, #constants2 do
+						self.constants[self.splitPoint + i] = constants2[i];
+					end
+					self:addRotateCode(ast, shift2, self.arrId2, #constants2);
+				end
+			end
+		end,
+	});
+
+	for i, f in ipairs(steps) do
+		f();
 	end
 
-	table.insert(ast.body.statements, insertPosition, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
-		Ast.VariableExpression(funcScope, arg)
-	}, Ast.Block({
-		Ast.ReturnStatement({
-			Ast.IndexExpression(
-				Ast.VariableExpression(self.rootScope, self.arrId),
-				addSubArg
-			)
-		});
-	}, funcScope)));
-	insertPosition = insertPosition + 1;
+	-- Add the Array Declarations (split into two arrays)
+	table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId2}, {self:createArray(self.splitPoint + 1, #self.constants)}));
+	table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId1}, {self:createArray(1, self.splitPoint)}));
 
-	-- 3. Add decode code (if needed)
-	if self.Encoding == "base64" then
-		self:addDecodeCode(ast, insertPosition);
-		insertPosition = insertPosition + 1;
-	end
-
-	-- 4. Add rotate code (if needed)
-	if self.Rotate and #self.constants > 1 then
-		self:addRotateCode(ast, insertPosition);
-		insertPosition = insertPosition + 1;
-	end
-	
 	self.rootScope = nil;
-	self.arrId     = nil;
+	self.arrId1 = nil;
+	self.arrId2 = nil;
+	self.splitPoint = nil;
+
 	self.constants = nil;
 	self.lookup    = nil;
 end
