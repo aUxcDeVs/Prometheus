@@ -1,7 +1,8 @@
--- This Script is Part of the Prometheus Obfuscator by Levno_710
+-- This Script is Part of the AuxFuscator by Aux Credit's ( Lenovo )
 --
 -- test.lua
 -- This script contains the Code for the Prometheus CLI
+-- i just use this so i don't modify others Codes :D
 
 -- Configure package.path for requiring Prometheus
 local function script_path()
