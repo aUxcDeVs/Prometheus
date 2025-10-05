@@ -1,6 +1,7 @@
 -- This Script is Part of the Prometheus Obfuscator by Levno_710
+-- Modified with Toxic Names by Aux
 --
--- namegenerators/confuse.lua
+-- namegenerators/confuse.lua (Pure Toxic Edition)
 --
 -- This Script provides a function for generation of confusing variable names
 
@@ -144,6 +145,25 @@ local varNames = {
     "assert",
     "collectgarbage",
     "a", "b", "c", "i", "j", "m",
+    
+    -- TOXIC NAMES (Roasting OLD/DEAD obfuscators only)
+    "PSUdead",
+    "IronBrewRust",
+    "OldMoonSec",
+    "SkillIssue",
+    "SkidDetected",
+    "NiceTrieKid",
+    "TouchGrass",
+    "MomsCalling",
+    "GoOutside",
+    "StillHere",
+    "justGiveUp",
+    "WastingTime",
+    "FailedCrack",
+    "Deobfailed",
+    "NahBrogetout",
+    "CopeMald",
+    "RatioPlusL",
 }
 
 local function generateName(id, scope)
