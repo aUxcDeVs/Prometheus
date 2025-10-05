@@ -1,4 +1,4 @@
--- This Script is Part of the Prometheus Obfuscator by Levno_710
+-- This Script is Part of the AuxFuscator by Aux Credits ( Levno_710 )
 --
 -- Vmify.lua
 --
