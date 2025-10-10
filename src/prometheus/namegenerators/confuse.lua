@@ -1,6 +1,6 @@
 -- This Script is Part of the Prometheus Obfuscator by Levno_710
 -- Modified with Toxic Names by Aux
--- BALANCED EDITION: 60% Real Confusing / 40% Toxic Memes
+-- BALANCED EDITION: 85% Real Confusing / 15% Toxic Memes
 --
 -- namegenerators/confuse.lua (Pure Toxic Edition)
 --
@@ -10,7 +10,7 @@ local util = require("prometheus.util");
 local chararray = util.chararray;
 
 local varNames = {
-    -- === 60% REAL CONFUSING OBFUSCATION === --
+    -- === 85% REAL CONFUSING OBFUSCATION === --
     
     -- REPEATED CHARACTER CONFUSION (looks super encrypted)
     "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII111111IIIII",
@@ -33,6 +33,11 @@ local varNames = {
     "oOoOoOoOoOoOoOoOoOoOoOoOoOoO",
     "lIlIlIlIlIlIlIlIlIlIlIlIlIlI",
     "I1I1I1I1I1I1I1I1I1I1I1I1I1I1",
+    "OOOOOOOOOOOOOOOOoooooooooooo",
+    "iiiiiiIIIIIIiiiiiiIIIIII",
+    "llllllLLLLLLllllllLLLLLL",
+    "IIIIIIiiiiiIIIIIIiiiiii",
+    "000000OOOOOO000000OOOOOO",
     
     -- SUPER LONG REPEATED PATTERNS (250+ chars)
     "IIIIIIIIIIIIIIIIIIIIIIIIIIIII1111111111111111111111111IIIIIIIIIIIIIIIIIIIIIlllllllllllllllllllIIIIIIIIIIIIIIII1111111111111IIIIIIIIIIlllllllllIIIIIIII",
@@ -46,6 +51,8 @@ local varNames = {
     "oOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoOoO",
     "lIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlIlI",
     "I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1I1",
+    "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+    "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
     
     -- MIXED CONFUSION PATTERNS
     "IlIlIlIl1l1l1lOoOoOoOo0O0O0O",
@@ -56,52 +63,76 @@ local varNames = {
     "lIlIlI0O0O0OoOoOoO1I1I1I",
     "OoOoIlIl1l1l0O0OIlIl",
     "0Oo0Oo0OIl1Il1IlOo0Oo",
+    "IIIIllll0000OOOO",
+    "llllIIII0000oooo",
+    "O0O0I1I1l1l1o0o0",
+    "Il1IO0o1lI0O",
     
-    -- === 40% TOXIC MEME NAMES === --
+    -- FAKE LUA KEYWORDS/FUNCTIONS (looks legit!)
+    "loadstring",
+    "then",
+    "elseif",
+    "getfenv",
+    "setfenv",
+    "rawget",
+    "rawset",
+    "getmetatable",
+    "setmetatable",
+    "pcall",
+    "xpcall",
+    "tonumber",
+    "tostring",
+    "type",
+    "next",
+    "pairs",
+    "ipairs",
+    "select",
+    "unpack",
+    "newproxy",
+    "coroutine",
+    "debug",
+    "string",
+    "table",
+    "math",
+    "require",
+    "module",
+    "package",
+    "assert",
+    "collectgarbage",
+    "dofile",
+    "error",
+    "gcinfo",
+    "load",
+    "rawequal",
+    "repeat",
+    "until",
+    "while",
+    "local",
+    "function",
+    "return",
+    "break",
+    "end",
+    "nil",
+    "true",
+    "false",
+    "and",
+    "or",
+    "not",
+    "in",
+    "do",
     
-    -- ORIGINAL TOXIC NAMES
-    "PSUdead",
+    -- === 15% TOXIC MEME NAMES === --
+    
+    "iLovewizardLib",
     "IronBrewRust",
     "OldMoonSec",
     "SkillIssue",
-    "SkidDetected",
-    "NiceTrieKid",
+    "SkidgetOut",
     "TouchGrass",
-    "MomsCalling",
-    "GoOutside",
-    "StillHere",
-    "justGiveUp",
-    "realy",
-    "then",
-    "dontobfuscateforstrings",
-    "NahBrogetout",
-    "CopeMald",
-    "RatioPlusL",
-    
-    -- EMOJI TOXIC NAMES
-    "SkillIssue",
-    "NahBro",
-    "TouchGrass",
-    "GetRekt",
-    "Skull",
-    "Bruh",
-    "ForkEdPrometheus",
-    "Iusedsomehercules_obfuscation",
-    "Bozo",
-    
-    -- SHORT CHAOS
-    "L",
-    "W",
-    "ratio",
-    "cope",
-    "skill",
-    "issue",
-    "bruh",
-    "lmao",
-    "rekt",
-    "noob",
-    "skid",
-    "based",
+    "goodBoy",
+    "SixSeven",
+    "IronbrewIsNice",
+    "forkedPrometheus",
 }
 
 local function generateName(id, scope)
