@@ -21,7 +21,7 @@ return {
             {
                 Name = "AntiTamper";
                 Settings = {
-                    UseDebug = true;
+                    UseDebug = false;
                 };
             },
             {
