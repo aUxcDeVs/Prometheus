@@ -11,7 +11,7 @@ return {
         -- For minifying no VarNamePrefix is applied
         VarNamePrefix = SK1D;
         -- Name Generator for Variables that look like this: IlI1lI1l
-        NameGenerator = "confuse";
+        NameGenerator = "mangled";
         -- No pretty printing
         PrettyPrint = false;
         -- Seed is generated based on current time
