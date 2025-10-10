@@ -34,7 +34,7 @@ return {
                 Name = "ConstantArray";
                 Settings = {
                     Treshold    = 1;
-                    StringsOnly = true;
+                    Encoding    = "base64";
                 }
             },
             {
