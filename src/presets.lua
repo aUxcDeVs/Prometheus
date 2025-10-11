@@ -9,7 +9,7 @@ return {
         -- The default LuaVersion is Lua51
         LuaVersion = "Lua51";
         -- For minifying no VarNamePrefix is applied
-        VarNamePrefix = "ABCABCABCABCABC";
+        VarNamePrefix = "ABC";
         -- Name Generator for Variables that look like this: IlI1lI1l
         NameGenerator = "ConfuseII";
         -- No pretty printing
@@ -22,13 +22,6 @@ return {
                 Name = "AntiTamper";
                 Settings = {
                     UseDebug = false;
-                };
-            },
-            {
-                Name = "NumbersToExpressions";
-                Settings = {
-                    Treshold = 1;           -- 100% of numbers will be converted to expressions
-                    InternalTreshold = 0.5; -- 50% chance to nest expressions deeper (0.2-0.8 range)
                 };
             },
             {
