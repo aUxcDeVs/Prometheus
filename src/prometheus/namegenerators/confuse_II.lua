@@ -16,10 +16,10 @@ local VarStartDigits = chararray("Il");
 
 local varNames = {
     
-    "PSUnnWuw",
+    "CPU",
     "IronBrewRust",
     "LuraphIsbetter",
-    "SkillIssue",
+    "I1iI1",
     "justlearnlua",
     "ifyoureadingthisyourgay",
     "Skibidi",
