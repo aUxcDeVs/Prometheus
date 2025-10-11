@@ -34,7 +34,10 @@ return {
                 Name = "ConstantArray";
                 Settings = {
                     Treshold    = 1;
-                    Encoding    = "base64";
+                    Encoding    = "none";      -- No Base64 encoding
+                    Rotate      = true;        -- Enable rotation
+                    StringsOnly = false;       -- Extract ALL constants (strings AND numbers)!
+                    Shuffle     = true;        -- Shuffle the array too
                 }
             },
             {
