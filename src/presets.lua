@@ -9,7 +9,7 @@ return {
         -- The default LuaVersion is Lua51
         LuaVersion = "Lua51";
         -- For minifying no VarNamePrefix is applied
-        VarNamePrefix = "SHIZO[0]OBFUSCATORABCABCBBCABCABAACABCABCA[1]ABC[2]FORK[1]PROMETHEUS";
+        VarNamePrefix = "SHIZOnOBFUSCATORnABCABCBBCABCABAACABCABCA1ABCnFORKnnPROMETHEUS";
         -- Name Generator for Variables that look like this: IlI1lI1l
         NameGenerator = "Il";
         -- No pretty printing
