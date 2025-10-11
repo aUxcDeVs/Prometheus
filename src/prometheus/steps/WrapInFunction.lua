@@ -1,4 +1,4 @@
--- This Script is Part of the AuxFuscator by Aux Credis ( Levno_710 )
+-- This Script is Part of the AuxFuscator by Aux Credits ( Levno_710 )
 --
 -- WrapInFunction.lua
 --
@@ -34,10 +34,13 @@ function WrapInFunction:apply(ast)
 		local scope = Scope:new(ast.globalScope);
 		body.scope:setParent(scope);
 
+		-- Create a local variable
+		local varId = scope:addVariable();
+
 		ast.body = Ast.Block({
-			Ast.ReturnStatement({
+			Ast.LocalVariableDeclaration(scope, {varId}, {
 				Ast.FunctionCallExpression(Ast.FunctionLiteralExpression({Ast.VarargExpression()}, body), {Ast.VarargExpression()})
-			});
+			})
 		}, scope);
 	end
 end
