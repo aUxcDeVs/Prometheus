@@ -5,7 +5,7 @@
 -- Mixed version: Toxic names + Il1 confusing characters
 
 local MIN_CHARACTERS = 5;
-local MAX_INITIAL_CHARACTERS = 10;
+local MAX_INITIAL_CHARACTERS = 20;
 
 local util = require("prometheus.util");
 local chararray = util.chararray;
@@ -21,18 +21,18 @@ local varNames = {
     "LuraphIsbetter",
     "SkillIssue",
     "justlearnlua",
-    "NiceTrieKid",
+    "ifyoureadingthisyourgay",
     "Skibidi",
-    "MomsCalling",
+    "ShizoV3",
     "UwU",
     "Lmao",
-    "justGiveUp",
-    "WastingTime",
+    "justgiveup",
+    "wastingtime",
     "pleasedontskid",
-    "ForkbYpRometheus",
-    "Gay",
-    "GetOut!",
-    "ShIzO",
+    "forkbypRometheus",
+    "gay",
+    "getout",
+    "shizo",
     
     
     "loadstring",
@@ -65,7 +65,7 @@ local varNames = {
     "collectgarbage",
     "dofile",
     "error",
-    "gcinfo",
+    "kiddo",
     "load",
     "rawequal",
     
