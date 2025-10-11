@@ -9,7 +9,7 @@ return {
         -- The default LuaVersion is Lua51
         LuaVersion = "Lua51";
         -- For minifying no VarNamePrefix is applied
-        VarNamePrefix = "SHIZOnOBFUSCATORnABCABCBBCABCABAACABCABCA1ABCnFORKnnPROMETHEUS";
+        VarNamePrefix = "ABCABCABCABCABC";
         -- Name Generator for Variables that look like this: IlI1lI1l
         NameGenerator = "ConfuseII";
         -- No pretty printing
@@ -22,6 +22,13 @@ return {
                 Name = "AntiTamper";
                 Settings = {
                     UseDebug = false;
+                };
+            },
+            {
+                Name = "NumbersToExpressions";
+                Settings = {
+                    Treshold = 1;           -- 100% of numbers will be converted to expressions
+                    InternalTreshold = 0.5; -- 50% chance to nest expressions deeper (0.2-0.8 range)
                 };
             },
             {
@@ -39,7 +46,7 @@ return {
                     Shuffle                 = true;       -- Shuffle the array
                     Rotate                  = true;       -- Rotate the array
                     LocalWrapperTreshold    = 1;          -- 100% of functions get local wrappers
-                    LocalWrapperCount       = 5;          -- 5 wrapper functions per scope (adjust as needed)
+                    LocalWrapperCount       = 5;          -- 5 wrapper functions per scope
                     LocalWrapperArgCount    = 10;         -- 10 arguments per wrapper
                     MaxWrapperOffset        = 65535;      -- Max offset for wrappers
                 }
