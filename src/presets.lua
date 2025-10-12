@@ -9,7 +9,7 @@ return {
         -- The default LuaVersion is Lua51
         LuaVersion = "Lua51";
         -- For minifying no VarNamePrefix is applied
-        VarNamePrefix = "CPU";
+        VarNamePrefix = "T";
         -- Name Generator for Variables that look like this: IlI1lI1l
         NameGenerator = "ConfuseII";
         -- No pretty printing
@@ -41,13 +41,19 @@ return {
                 Settings = {
                     Treshold                = 1;          -- 100% of nodes affected
                     Encoding                = "base64";   -- Base64 encoding for strings
-                    StringsOnly             = false;      -- Extract BOTH strings AND numbers
+                    StringsOnly             = true;      -- Extract BOTH strings AND numbers
                     Shuffle                 = true;       -- Shuffle the array
                     Rotate                  = true;       -- Rotate the array
                     LocalWrapperTreshold    = 1;          -- 100% of functions get local wrappers
                     LocalWrapperCount       = 5;          -- 5 wrapper functions per scope
                     LocalWrapperArgCount    = 10;         -- 10 arguments per wrapper
                     MaxWrapperOffset        = 65535;      -- Max offset for wrappers
+                }
+            },
+            {
+                Name = "NumbersToExpressions";
+                Settings = {
+
                 }
             },
             {
