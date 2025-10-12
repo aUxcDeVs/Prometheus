@@ -4,4 +4,5 @@ return {
 	ConstantArray = require("prometheus.steps.ConstantArray");
 	AntiTamper = require("prometheus.steps.AntiTamper");
 	EncryptStrings = require("prometheus.steps.EncryptStrings");
+	NumbersToExpressions = require("prometheus.steps.NumbersToExpressions");
 }
