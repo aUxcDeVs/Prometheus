@@ -4,6 +4,9 @@
 --
 -- This Script provides a Simple Obfuscation Step that wraps the entire Script into a function
 
+-- TODO: Wrapper Functions
+-- TODO: Proxy Object for indexing: e.g: ARR[X] becomes ARR + X
+
 local Step = require("prometheus.step");
 local Ast = require("prometheus.ast");
 local Scope = require("prometheus.scope");
@@ -200,7 +203,7 @@ function ConstantArray:addRotateCode(ast, shift)
 		end
 	end)
 
-	table.insert(ast.body.statements, forStat);
+	table.insert(ast.body.statements, 1, forStat);
 end
 
 function ConstantArray:addDecodeCode(ast)
@@ -278,7 +281,7 @@ function ConstantArray:addDecodeCode(ast)
 			end
 		end)
 	
-		table.insert(ast.body.statements, forStat);
+		table.insert(ast.body.statements, 1, forStat);
 	end
 end
 
@@ -474,7 +477,7 @@ function ConstantArray:apply(ast, pipeline)
 			end
 
 			-- Create and Add the Function Declaration
-			table.insert(ast.body.statements, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
+			table.insert(ast.body.statements, 1, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
 				Ast.VariableExpression(funcScope, arg)
 			}, Ast.Block({
 				Ast.ReturnStatement({
@@ -484,6 +487,11 @@ function ConstantArray:apply(ast, pipeline)
 					)
 				});
 			}, funcScope)));
+
+			-- Resulting Code:
+			-- function xy(a)
+			-- 		return ARR[a - 10]
+			-- end
 		end,
 		-- Rotate Array and Add unrotate code
 		function()
@@ -500,7 +508,7 @@ function ConstantArray:apply(ast, pipeline)
 		f();
 	end
 
-	-- Add the Array Declaration AT THE END (BOTTOM)
+	-- Add the Array Declaration AT THE BOTTOM (CHANGED FROM position 1 to no position = append to end)
 	table.insert(ast.body.statements, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId}, {self:createArray()}));
 
 	self.rootScope = nil;
