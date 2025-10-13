@@ -5,7 +5,7 @@
 -- This Script Provides some configuration presets
 
 return {
-    ["Weak"] = {
+    ["Strong"] = {
         -- The default LuaVersion is Lua51
         LuaVersion = "Lua51";
         -- For minifying no VarNamePrefix is applied
