@@ -5,4 +5,6 @@ return {
 	AntiTamper = require("prometheus.steps.AntiTamper");
 	EncryptStrings = require("prometheus.steps.EncryptStrings");
 	NumbersToExpressions = require("prometheus.steps.NumbersToExpressions");
+	ProxifyLocals = require("prometheus.steps.ProxifyLocals");
+	AddVararg = require("prometheus.steps.AddVararg");
 }
