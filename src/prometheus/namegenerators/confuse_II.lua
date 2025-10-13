@@ -1,8 +1,8 @@
--- This Script is Part of the Prometheus Obfuscator by Levno_710
+-- This Script is Part of the Prometheus And CPU Obfuscator by Levno_710 and VantaXock 
 --
--- namegenerators/mixed_toxic_shuffled.lua
+-- namegenerators/mixed_mangled_BC_shuffled.lua
 --
--- Mixed version: Toxic names + Il1 confusing characters + Shuffled mangled names + Hex numbers
+-- Combined version: Shuffled mangled names + BC names + Il1 confusing + Hex numbers
 
 local MIN_CHARACTERS = 5;
 local MAX_INITIAL_CHARACTERS = 20;
@@ -12,9 +12,20 @@ local util = require("prometheus.util");
 local chararray = util.chararray;
 
 local offset = 0;
-local VarDigits = chararray("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_Il1iIiIiIIiIiIiIiIIIII");
-local VarStartDigits = chararray("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZIl");
 
+-- Mangled shuffled character sets (from first script)
+local VarDigits = chararray("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
+local VarStartDigits = chararray("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+
+-- Extended character sets with Il1 confusion
+local VarDigitsExtended = chararray("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_Il1iIiIiIIiIiIiIiIIIII");
+local VarStartDigitsExtended = chararray("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZIl");
+
+-- Confusion character sets
+local ConfuseDigits = chararray("Il1");
+local ConfuseStart = chararray("Il");
+
+-- Toxic variable names array
 local varNames = {
     "CPU",
     "IronBrewRust",
@@ -142,9 +153,33 @@ local varNames = {
 }
 
 local function generateName(id, scope)
-    local choice = math.random(1, 4)
+    local choice = math.random(1, 5)
     
     if choice == 1 then
+        -- Simple shuffled mangled method (from first script)
+        local name = ''
+        local d = id % #VarStartDigits
+        id = (id - d) / #VarStartDigits
+        name = name..VarStartDigits[d+1]
+        while id > 0 do
+            local d = id % #VarDigits
+            id = (id - d) / #VarDigits
+            name = name..VarDigits[d+1]
+        end
+        return name
+    elseif choice == 2 then
+        -- Extended shuffled mangled with Il1 confusion
+        local name = ''
+        local d = id % #VarStartDigitsExtended
+        id = (id - d) / #VarStartDigitsExtended
+        name = name..VarStartDigitsExtended[d+1]
+        while id > 0 do
+            local d = id % #VarDigitsExtended
+            id = (id - d) / #VarDigitsExtended
+            name = name..VarDigitsExtended[d+1]
+        end
+        return name
+    elseif choice == 3 then
         -- Toxic names method
         local name = {};
         local d = id % #varNames
@@ -156,31 +191,17 @@ local function generateName(id, scope)
             table.insert(name, varNames[d + 1]);
         end
         return table.concat(name, "_");
-    elseif choice == 2 then
-        -- Il1 confusing method
+    elseif choice == 4 then
+        -- Pure Il1 confusion method
         local name = ''
         id = id + offset;
-        local confuseDigits = chararray("Il1");
-        local confuseStart = chararray("Il");
-        local d = id % #confuseStart
-        id = (id - d) / #confuseStart
-        name = name..confuseStart[d+1]
+        local d = id % #ConfuseStart
+        id = (id - d) / #ConfuseStart
+        name = name..ConfuseStart[d+1]
         while id > 0 do
-            local d = id % #confuseDigits
-            id = (id - d) / #confuseDigits
-            name = name..confuseDigits[d+1]
-        end
-        return name
-    elseif choice == 3 then
-        -- Shuffled mangled method
-        local name = ''
-        local d = id % #VarStartDigits
-        id = (id - d) / #VarStartDigits
-        name = name..VarStartDigits[d+1]
-        while id > 0 do
-            local d = id % #VarDigits
-            id = (id - d) / #VarDigits
-            name = name..VarDigits[d+1]
+            local d = id % #ConfuseDigits
+            id = (id - d) / #ConfuseDigits
+            name = name..ConfuseDigits[d+1]
         end
         return name
     else
@@ -190,9 +211,14 @@ local function generateName(id, scope)
 end
 
 local function prepare(ast)
-    util.shuffle(varNames);
+    -- Shuffle all character arrays and name lists
     util.shuffle(VarDigits);
     util.shuffle(VarStartDigits);
+    util.shuffle(VarDigitsExtended);
+    util.shuffle(VarStartDigitsExtended);
+    util.shuffle(varNames);
+    
+    -- Set random offset for confusion method
     offset = math.random(3 ^ MIN_CHARACTERS, 3 ^ MAX_INITIAL_CHARACTERS);
 end
 
