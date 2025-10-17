@@ -1,4 +1,4 @@
--- This Script is Part of the Prometheus Obfuscator by Levno_710
+-- This Script is Part of the Prometheus Obfuscator by Shizo
 --
 -- WrapInFunction.lua
 --
@@ -16,7 +16,7 @@ WrapInFunction.SettingsDescriptor = {
 	Iterations = {
 		name = "Iterations",
 		description = "The Number Of Iterations",
-		type = "boolean",
+		type = "number",
 		default = 1,
 		min = 1,
 		max = nil,
