@@ -1,48 +1,82 @@
--- This Script is Part of the AuxFuscator by Aux Credits ( Levno_710 )
+-- This Script is Part of the Prometheus Obfuscator by Levno_710
 --
--- WrapInFunction.lua
+-- WrapInMoonSec.lua
 --
--- This Script provides a Simple Obfuscation Step that wraps the entire Script into a function
+-- This Script provides a MoonSec-Style Wrapper that wraps code with gsub pattern
 
 local Step = require("prometheus.step");
 local Ast = require("prometheus.ast");
 local Scope = require("prometheus.scope");
 
-local WrapInFunction = Step:extend();
-WrapInFunction.Description = "This Step Wraps the Entire Script into a Function";
-WrapInFunction.Name = "Wrap in Function";
+local WrapInMoonSec = Step:extend();
+WrapInMoonSec.Description = "This Step Wraps the Entire Script in MoonSec Style with gsub wrapper";
+WrapInMoonSec.Name = "Wrap in MoonSec";
 
-WrapInFunction.SettingsDescriptor = {
+WrapInMoonSec.SettingsDescriptor = {
 	Iterations = {
 		name = "Iterations",
-		description = "The Number Of Iterations",
+		description = "The Number Of Wrapper Iterations",
 		type = "number",
 		default = 1,
 		min = 1,
 		max = nil,
+	},
+	HeaderText = {
+		name = "Header Text",
+		description = "The protection header text",
+		type = "string",
+		default = "This file was protected with MoonSec V3",
 	}
 }
 
-function WrapInFunction:init(settings)
-	
+function WrapInMoonSec:init(settings)
+	self.HeaderText = settings.HeaderText or "This file was protected with Shizo V3";
 end
 
-function WrapInFunction:apply(ast)
+function WrapInMoonSec:apply(ast)
 	for i = 1, self.Iterations, 1 do
 		local body = ast.body;
-
 		local scope = Scope:new(ast.globalScope);
 		body.scope:setParent(scope);
 
-		-- Create a local variable
-		local varId = scope:addVariable();
+		-- Create the MoonSec wrapper pattern:
+		-- ([[Header]]):gsub('.+', (function(a) _Var = a; end)); 
+		-- return(function(...)
+		--     [original code]
+		-- end)(...)
+		
+		local gsubWrapper = Ast.FunctionCallExpression(
+			Ast.IndexExpression(
+				Ast.StringExpression(self.HeaderText),
+				Ast.StringExpression("gsub")
+			),
+			{
+				Ast.StringExpression(".+"),
+				Ast.FunctionLiteralExpression(
+					{Ast.VariableExpression("a")},
+					Ast.Block({
+						Ast.AssignmentStatement(
+							{Ast.VariableExpression("_MoonSecVar")},
+							{Ast.VariableExpression("a")}
+						)
+					}, Scope:new())
+				)
+			}
+		);
 
 		ast.body = Ast.Block({
-			Ast.LocalVariableDeclaration(scope, {varId}, {
-				Ast.FunctionCallExpression(Ast.FunctionLiteralExpression({Ast.VarargExpression()}, body), {Ast.VarargExpression()})
+			Ast.DoStatement(Ast.Block({gsubWrapper}, Scope:new())),
+			Ast.ReturnStatement({
+				Ast.FunctionCallExpression(
+					Ast.FunctionLiteralExpression(
+						{Ast.VarargExpression()}, 
+						body
+					), 
+					{Ast.VarargExpression()}
+				)
 			})
 		}, scope);
 	end
 end
 
-return WrapInFunction;
+return WrapInMoonSec;
